@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
 import { db, auth } from '@/firebase'
 import { ref as dbRef, push, onValue, remove } from 'firebase/database'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -11,52 +10,93 @@ export interface Driver {
   age: number
 }
 
-export const useDriverStore = defineStore('driver', () => {
-  const drivers = ref<Driver[]>([])
-  const loading = ref(false)
-  const error = ref('')
+export const useDriverStore = defineStore('driver', {
+  state: () => ({
+    drivers: [] as Driver[],
+    loading: false,
+    error: '',
+  }),
 
-  const driversRef = dbRef(db, 'driver_data')
+  getters: {
+    totalDrivers: (state): number =>
+      state.drivers.length,
 
-  function fetchDrivers() {
-    loading.value = true
-    error.value = ''
+    hasError: (state): boolean =>
+      state.error !== '',
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        error.value = 'Not authenticated.'
-        loading.value = false
-        return
-      }
+    getDriverById: (state) => (id: string): Driver | undefined =>
+      state.drivers.find((d) => d.id === id),
 
-      onValue(driversRef, (snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.val()
-          drivers.value = Object.entries(data).map(([key, val]: [string, any]) => ({
-            key,
-            id: val.id,
-            name: val.name,
-            age: val.age,
-          }))
-        } else {
-          drivers.value = []
+    averageAge: (state): number => {
+      if (!state.drivers.length) return 0
+      const total = state.drivers.reduce((sum, d) => sum + d.age, 0)
+      return Math.round(total / state.drivers.length)
+    },
+  },
+
+  actions: {
+    fetchDrivers() {
+      this.loading = true
+      this.error = ''
+
+      const driversRef = dbRef(db, 'driver_data')
+
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          this.error = 'Not authenticated.'
+          this.loading = false
+          return
         }
-        loading.value = false
-      }, () => {
-        error.value = 'Failed to fetch driver data.'
-        loading.value = false
+
+        onValue(
+          driversRef,
+          (snapshot) => {
+            if (snapshot.exists()) {
+              const data = snapshot.val()
+              this.drivers = Object.entries(data).map(([key, val]: [string, any]) => ({
+                key,
+                id: val.id,
+                name: val.name,
+                age: val.age,
+              }))
+            } else {
+              this.drivers = []
+            }
+            this.loading = false
+          },
+          () => {
+            this.error = 'Failed to fetch driver data.'
+            this.loading = false
+          },
+        )
       })
-    })
-  }
+    },
 
-  async function addDriver(name: string, age: number, id: string) {
-    if (!name.trim() || !id.trim()) return
-    await push(driversRef, { id, name, age })
-  }
+    async addDriver(name: string, age: number, id: string) {
+      if (!name.trim() || !id.trim()) return
+      try {
+        await push(dbRef(db, 'driver_data'), { id, name, age })
+      } catch {
+        this.error = 'Failed to add driver.'
+      }
+    },
 
-  async function deleteDriver(key: string) {
-    await remove(dbRef(db, `driver_data/${key}`))
-  }
+    async deleteDriver(key: string) {
+      try {
+        await remove(dbRef(db, `driver_data/${key}`))
+      } catch {
+        this.error = 'Failed to delete driver.'
+      }
+    },
 
-  return { drivers, loading, error, fetchDrivers, addDriver, deleteDriver }
+    clearError() {
+      this.error = ''
+    },
+
+    resetStore() {
+      this.drivers = []
+      this.loading = false
+      this.error = ''
+    },
+  },
 })

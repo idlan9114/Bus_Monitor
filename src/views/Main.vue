@@ -6,7 +6,7 @@ import DeletePopUp from '@/components/DeletePopUp.vue';
 <template>
   <main class="bg-zinc-950 text-zinc-100 flex flex-col md:flex-row font-mono">
     
-    <div class="px-8 py-8 w-screen md:w-200">
+    <section class="px-8 py-8 w-screen md:w-200">
       <div class="max-w-screen">
         <img 
         src="@/assets/Images/picture.jpg" 
@@ -15,11 +15,15 @@ import DeletePopUp from '@/components/DeletePopUp.vue';
 
       </div>
       <div>
-        
+        <p class="py-2 ">adssfasefa</p>
       </div>
-    </div>
+    </section>
 
-    <DriverRegistry class="w-screen"/>
+    <section class="maw-screen flex-1">
+      <DriverRegistry />
+    </section>
+
+    
    
   </main>
 </template>

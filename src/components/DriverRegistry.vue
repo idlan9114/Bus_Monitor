@@ -25,8 +25,8 @@ onMounted(() => {
   store.fetchDrivers()
 })
 
-async function addDriver() {
-  await store.addDriver(
+function addDriver() {
+    store.addDriver(
     newDriverName.value,
     newDriverAge.value ?? 0,
     nextDriverID.value
@@ -38,14 +38,14 @@ async function addDriver() {
 </script>
 
 <template>
-    <div class="flex-1 p-10 flex flex-col gap-8 min-h-screen max-w-screen">
+    <main class="flex-1 p-10 flex flex-col gap-8 min-h-screen max-w-screen">
 
       <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold tracking-tight text-white">Driver Registry</h1>
+        <h1 class="text-[20px] md:text-2xl font-bold tracking-tight text-white">Driver Registry</h1>
         <span class="text-xs text-zinc-500 tracking-widest uppercase">{{ store.drivers.length }} drivers</span>
       </div>
 
-      <div class="rounded-lg border border-zinc-800 overflow-hidden">
+      <div class="rounded-lg border border-zinc-800 overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="bg-zinc-900 text-zinc-400 text-xs uppercase tracking-widest">
             <tr>
@@ -100,5 +100,5 @@ async function addDriver() {
 
       <DeletePopUp ref="deletePopUp"/>
 
-    </div>
+    </main>
 </template>

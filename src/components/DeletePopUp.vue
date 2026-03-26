@@ -7,9 +7,9 @@ const store = useDriverStore()
 const confirmKey = ref<string | null>(null)
 const confirmName = ref<string>('')
 
-async function confirmDelete() {
+function confirmDelete() {
   if (confirmKey.value) {
-    await store.deleteDriver(confirmKey.value)
+    store.deleteDriver(confirmKey.value)
     confirmKey.value = null
     confirmName.value = ''
   }

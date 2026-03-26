@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useBusStore } from '@/stores/busStore'
+import Datetime from '@/components/Datetime.vue'
 
 const store = useBusStore()
 
@@ -150,10 +151,17 @@ onMounted(() => {
       NO DATA AVAILABLE
     </div>
 
-  
+  <footer class="flex justify-between">
+
+    <p>
+      <Datetime class="text-left text-[#484f58] text-xs mt-3 tracking-wider"/>
+    </p>
     <p v-if="store.sensorHistory?.length" class="text-right text-[#484f58] text-xs mt-3 tracking-wider">
       SHOWING {{ Math.min(store.sensorHistory.length, 30) }} OF {{ store.sensorHistory.length }} RECORDS
     </p>
+    
+  </footer>
+    
 
   </main>
 </template>

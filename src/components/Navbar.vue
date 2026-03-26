@@ -3,7 +3,7 @@
 </script>
 
 <template>
-<div class="flex h-16 bg-[#202938] w-screen">
+<nav class="flex h-16 bg-[#202938] w-screen">
 
     <div class="flex px-8 py-5">
         <div class="text-white">
@@ -17,7 +17,7 @@
     <div class="px-8 py-2 ml-120">
 
     </div>
-</div>
+</nav>
     
 
 </template>
