@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
 import { db, auth } from '@/firebase'
 import { ref as dbRef, onValue } from 'firebase/database'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -15,39 +14,73 @@ export interface BusSensor {
   time: string
 }
 
-export const useBusStore = defineStore('bus', () => {
-  const sensorData = ref<BusSensor | null>(null)
-  const sensorHistory = ref<BusSensor[]>([])
-  const loading = ref(false)
-  const error = ref('')
+export const useBusStore = defineStore('bus', {
+  state: () => ({
+    sensorData: null as BusSensor | null,
+    sensorHistory: [] as BusSensor[],
+    loading: false,
+    error: '',
+  }),
 
-  function fetchAllSensorData() {
-    loading.value = true
-    error.value = ''
+  getters: {
+    latestSensor: (state): BusSensor | null =>
+      state.sensorHistory[0] ?? null,
 
-    // ✅ Wait for auth before reading DB
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        error.value = 'Not authenticated.'
-        loading.value = false
-        return
-      }
+    hasError: (state): boolean =>
+      state.error !== '',
 
-      const sensorRef = dbRef(db, '/sensor_data')
-      onValue(sensorRef, (snapshot) => {
-        if (snapshot.exists()) {
-          const allData = snapshot.val() as Record<string, BusSensor>
-          sensorHistory.value = Object.values(allData).reverse()
-        } else {
-          error.value = 'No sensor data found.'
+    isAccident: (state): boolean =>
+      state.sensorHistory.some((s) => s.accident === 1),
+
+    averageSpeed: (state): number => {
+      if (!state.sensorHistory.length) return 0
+      const total = state.sensorHistory.reduce((sum, s) => sum + s.speed, 0)
+      return Math.round(total / state.sensorHistory.length)
+    },
+  },
+
+  actions: {
+    fetchAllSensorData() {
+      this.loading = true
+      this.error = ''
+
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          this.error = 'Not authenticated.'
+          this.loading = false
+          return
         }
-        loading.value = false
-      }, () => {
-        error.value = 'Failed to fetch sensor data.'
-        loading.value = false
-      })
-    })
-  }
 
-  return { sensorData, sensorHistory, loading, error, fetchAllSensorData }
+        const sensorRef = dbRef(db, '/sensor_data')
+        onValue(
+          sensorRef,
+          (snapshot) => {
+            if (snapshot.exists()) {
+              const allData = snapshot.val() as Record<string, BusSensor>
+              this.sensorHistory = Object.values(allData).reverse()
+              this.sensorData = this.sensorHistory[0] ?? null
+            } else {
+              this.error = 'No sensor data found.'
+            }
+            this.loading = false
+          },
+          () => {
+            this.error = 'Failed to fetch sensor data.'
+            this.loading = false
+          },
+        )
+      })
+    },
+
+    clearError() {
+      this.error = ''
+    },
+
+    resetStore() {
+      this.sensorData = null
+      this.sensorHistory = []
+      this.loading = false
+      this.error = ''
+    },
+  },
 })
